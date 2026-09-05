@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# builds
+dist/
+client/dist/
+server/dist/
+
+# env & secrets
+.env
+.env.local
+*.log
+
+# editor / os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# typescript build info
+*.tsbuildinfo

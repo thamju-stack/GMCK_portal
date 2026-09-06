@@ -9,14 +9,15 @@ Express + TypeScript API.
 ```
 GMCK_MERN/
 ├── client/   React SPA (Vite, Tailwind v4, Redux)
-└── server/   Express API (mongoose + in-memory fallback)
+└── server/   Express API (Postgres/Neon + in-memory fallback)
 ```
 
 ## Requirements
 
 - Node.js >= 20 (built with Node 25 / npm 11)
-- MongoDB **optional** — without it the server runs an in-memory store
-  (data resets on restart, clearly marked sample/placeholder).
+- Postgres (e.g. [Neon](https://neon.tech)) **optional** — without it the
+  server runs an in-memory store (data resets on restart, clearly marked
+  sample/placeholder).
 
 ## Run in development
 
@@ -59,10 +60,11 @@ The repo is pre-wired for Vercel (root `package.json` + `vercel.json`):
    - `JWT_SECRET` — **required**. Without it, admin login is disabled in
      production rather than silently falling back to an insecure default.
    - `ADMIN_USER`, `ADMIN_PASS` — optional, default to `admin` / `admin123`.
-   - `MONGODB_URI` — optional but recommended. Without it the function uses
-     an in-memory store that resets on every cold start (admin edits and
-     appointment submissions are lost). With it, data persists in MongoDB
-     the same way it does when self-hosting.
+   - `DATABASE_URL` — optional but recommended, a Postgres connection string
+     (e.g. from [Neon](https://neon.tech), available as a Vercel Marketplace
+     integration). Without it the function uses an in-memory store that
+     resets on every cold start (admin edits and appointment submissions are
+     lost). With it, data persists the same way it does when self-hosting.
 
 ## API
 

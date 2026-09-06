@@ -8,7 +8,7 @@ import cors from 'cors';
 import { createRouter } from './routes.js';
 import type { Store } from './store.js';
 
-export function createApp(store: Store, opts: { usingMongo?: boolean } = {}): Express {
+export function createApp(store: Store, opts: { usingDb?: boolean } = {}): Express {
   const app = express();
   app.use(cors({ origin: true, credentials: true }));
   app.use(express.json({ limit: '2mb' }));
@@ -16,7 +16,7 @@ export function createApp(store: Store, opts: { usingMongo?: boolean } = {}): Ex
 
   app.use('/api', createRouter(store));
   app.get('/api/health', (_req, res) => {
-    res.json({ ok: true, mode: opts.usingMongo ? 'mongo' : 'memory', time: new Date().toISOString() });
+    res.json({ ok: true, mode: opts.usingDb ? 'postgres' : 'memory', time: new Date().toISOString() });
   });
 
   /* serve the client build when running standalone (local / self-hosted).

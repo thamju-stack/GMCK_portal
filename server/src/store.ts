@@ -1,119 +1,144 @@
 import bcrypt from 'bcryptjs';
-import mongoose from 'mongoose';
-import type { InferSchemaType, Model } from 'mongoose';
-
-const { model, models, Schema } = mongoose;
+import { neon } from '@neondatabase/serverless';
+import type { NeonQueryFunction } from '@neondatabase/serverless';
 
 import { seedBootstrap } from './data.js';
 import type {
   AdminUser, Appointment, AppointmentInput, BootstrapData, Department,
-  Doctor, EmergencyConfig,
+  Doctor, EmergencyConfig, Notice, NotificationItem, OpdRow,
 } from './types.js';
 
-const str = { type: String, required: true };
-
-const departmentSchema = new Schema({ name: str, desc: str, cat: str, loc: str, opd: str, services: [String] });
-const doctorSchema = new Schema({ name: str, des: str, dept: str, spec: String });
-const noticeSchema = new Schema({ t: str, cat: str, c: str, d: str, s: String });
-const notificationSchema = new Schema({ t: str, s: str, time: str, unread: Boolean, b: String, col: String });
-const opdSchema = new Schema({ day: str, morning: String, afternoon: String });
-const emergencySchema = new Schema({ key: str, phone: String, helpdesk: String });
-const appointmentSchema = new Schema({
-  name: str, phone: str, department: str, preferred_date: str, message: String,
-  created_at: { type: Date, default: Date.now },
-});
-const adminSchema = new Schema({ username: str, hash: str });
-
-function m() {
-  return {
-    Department: (models.Department ?? model('Department', departmentSchema)) as Model<InferSchemaType<typeof departmentSchema>>,
-    Doctor: (models.Doctor ?? model('Doctor', doctorSchema)) as Model<InferSchemaType<typeof doctorSchema>>,
-    Notice: (models.Notice ?? model('Notice', noticeSchema)) as Model<InferSchemaType<typeof noticeSchema>>,
-    Notification: (models.Notification ?? model('Notification', notificationSchema)) as Model<InferSchemaType<typeof notificationSchema>>,
-    Opd: (models.OpdRow ?? model('OpdRow', opdSchema)) as Model<InferSchemaType<typeof opdSchema>>,
-    Emergency: (models.Emergency ?? model('Emergency', emergencySchema)) as Model<InferSchemaType<typeof emergencySchema>>,
-    Appointment: (models.Appointment ?? model('Appointment', appointmentSchema)) as Model<InferSchemaType<typeof appointmentSchema>>,
-    Admin: (models.Admin ?? model('Admin', adminSchema)) as Model<InferSchemaType<typeof adminSchema>>,
-  };
+interface AppointmentRow {
+  id: string; name: string; phone: string; department: string;
+  preferred_date: string; message: string | null; created_at: string;
 }
 
-async function replace(model: Model<any>, docs: unknown[]): Promise<void> {
-  await model.deleteMany({});
-  await model.insertMany(docs as never[]);
+async function tableCount(sql: NeonQueryFunction<false, false>, table: string): Promise<number> {
+  const rows = (await sql.query(`SELECT count(*)::int AS n FROM ${table}`)) as unknown as { n: number }[];
+  return rows[0].n;
 }
 
-/* ================= mongo-backed store ================= */
-export class MongoStore implements Store {
+/* ================= postgres-backed store (Neon) ================= */
+export class PostgresStore implements Store {
+  private sql: NeonQueryFunction<false, false>;
+
+  constructor() {
+    this.sql = neon(process.env.DATABASE_URL as string);
+  }
+
   async bootstrap(): Promise<BootstrapData> {
-    const M = m();
+    const sql = this.sql;
     const [departments, doctors, notices, notifications, opd, emergency] = await Promise.all([
-      M.Department.find().lean(), M.Doctor.find().lean(), M.Notice.find().lean(),
-      M.Notification.find().lean(), M.Opd.find().sort({ day: 1 }).lean(),
-      M.Emergency.findOne({ key: 'default' }).lean(),
+      sql`SELECT data FROM departments ORDER BY id`,
+      sql`SELECT data FROM doctors ORDER BY id`,
+      sql`SELECT data FROM notices ORDER BY id`,
+      sql`SELECT data FROM notifications ORDER BY id`,
+      sql`SELECT data FROM opd_rows ORDER BY id`,
+      sql`SELECT phone, helpdesk FROM emergency WHERE key = 'default'`,
     ]);
+    const deptRows = departments as unknown as { data: Department }[];
+    const docRows = doctors as unknown as { data: Doctor }[];
+    const noticeRows = notices as unknown as { data: Notice }[];
+    const notifRows = notifications as unknown as { data: NotificationItem }[];
+    const opdRows = opd as unknown as { data: OpdRow }[];
+    const emergencyRows = emergency as unknown as EmergencyConfig[];
     return {
-      departments: departments.map((d) => ({ name: d.name, desc: d.desc, cat: d.cat, loc: d.loc, opd: d.opd, services: d.services })),
-      doctors: doctors.map((d) => ({ name: d.name, des: d.des, dept: d.dept, spec: d.spec ?? '' })),
-      notices: notices.map((n) => ({ t: n.t, cat: n.cat, c: n.c, d: n.d, s: n.s ?? '' })),
-      notifications: notifications.map((n) => ({ t: n.t, s: n.s ?? '', time: n.time, unread: n.unread ?? false, b: n.b ?? '', col: n.col ?? '' })),
-      opd: opd.map((o) => ({ day: o.day, morning: o.morning ?? '', afternoon: o.afternoon ?? '' })),
-      emergency: emergency ? { phone: emergency.phone ?? '', helpdesk: emergency.helpdesk ?? '' } : { phone: '', helpdesk: '' },
+      departments: deptRows.map((r) => r.data),
+      doctors: docRows.map((r) => r.data),
+      notices: noticeRows.map((r) => r.data),
+      notifications: notifRows.map((r) => r.data),
+      opd: opdRows.map((r) => r.data),
+      emergency: emergencyRows[0] ?? { phone: '', helpdesk: '' },
     };
   }
 
   async saveDepartments(list: Department[]): Promise<void> {
-    await replace(m().Department, list);
+    const sql = this.sql;
+    await sql`DELETE FROM departments`;
+    await Promise.all(list.map((item) => sql`INSERT INTO departments (data) VALUES (${JSON.stringify(item)})`));
   }
 
   async saveDoctors(list: Doctor[]): Promise<void> {
-    await replace(m().Doctor, list);
+    const sql = this.sql;
+    await sql`DELETE FROM doctors`;
+    await Promise.all(list.map((item) => sql`INSERT INTO doctors (data) VALUES (${JSON.stringify(item)})`));
   }
 
   async saveEmergency(em: EmergencyConfig): Promise<void> {
-    await m().Emergency.updateOne({ key: 'default' }, { $set: { phone: em.phone, helpdesk: em.helpdesk } }, { upsert: true });
+    await this.sql`
+      INSERT INTO emergency (key, phone, helpdesk) VALUES ('default', ${em.phone}, ${em.helpdesk})
+      ON CONFLICT (key) DO UPDATE SET phone = excluded.phone, helpdesk = excluded.helpdesk`;
   }
 
   async addAppointment(a: AppointmentInput): Promise<Appointment> {
-    const doc = await m().Appointment.create(a);
-    return { id: String(doc._id), ...a, created_at: new Date().toISOString() };
+    const id = `ap-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const result = await this.sql`
+      INSERT INTO appointments (id, name, phone, department, preferred_date, message)
+      VALUES (${id}, ${a.name}, ${a.phone}, ${a.department}, ${a.preferred_date}, ${a.message ?? ''})
+      RETURNING id, name, phone, department, preferred_date, message, created_at`;
+    const rows = result as unknown as AppointmentRow[];
+    const row = rows[0];
+    return {
+      id: row.id, name: row.name, phone: row.phone, department: row.department,
+      preferred_date: row.preferred_date, message: row.message ?? '', created_at: new Date(row.created_at).toISOString(),
+    };
   }
 
   async listAppointments(): Promise<Appointment[]> {
-    const docs = await m().Appointment.find().sort({ created_at: -1 }).lean();
-    return docs.map((d) => ({
-      id: String(d._id), name: d.name, phone: d.phone, department: d.department,
-      preferred_date: d.preferred_date, message: d.message ?? '', created_at: new Date(d.created_at).toISOString(),
+    const result = await this.sql`
+      SELECT id, name, phone, department, preferred_date, message, created_at
+      FROM appointments ORDER BY created_at DESC`;
+    const rows = result as unknown as AppointmentRow[];
+    return rows.map((row) => ({
+      id: row.id, name: row.name, phone: row.phone, department: row.department,
+      preferred_date: row.preferred_date, message: row.message ?? '', created_at: new Date(row.created_at).toISOString(),
     }));
   }
 
   async getAdmin(username: string): Promise<AdminUser | null> {
-    const doc = await m().Admin.findOne({ username }).lean();
-    return doc ? { username: doc.username, hash: doc.hash } : null;
+    const result = await this.sql`SELECT username, hash FROM admins WHERE username = ${username}`;
+    const rows = result as unknown as AdminUser[];
+    return rows[0] ?? null;
   }
 
   async setAdminPassword(username: string, hash: string): Promise<void> {
-    await m().Admin.updateOne({ username }, { $set: { hash } }, { upsert: true });
+    await this.sql`
+      INSERT INTO admins (username, hash) VALUES (${username}, ${hash})
+      ON CONFLICT (username) DO UPDATE SET hash = excluded.hash`;
   }
 
-  /* Only seeds collections that are still empty — Mongo persists across
+  /* Only seeds tables that are still empty — Postgres persists across
      restarts/cold starts, so re-seeding unconditionally would wipe out
      admin edits every time the serverless function cold-starts. */
   async seed(adminUsername: string, adminHash: string): Promise<void> {
+    const sql = this.sql;
     const seed = seedBootstrap();
-    const M = m();
-    if ((await M.Department.countDocuments()) === 0) await replace(M.Department, seed.departments);
-    if ((await M.Doctor.countDocuments()) === 0) await replace(M.Doctor, seed.doctors);
-    if ((await M.Notice.countDocuments()) === 0) await replace(M.Notice, seed.notices);
-    if ((await M.Notification.countDocuments()) === 0) await replace(M.Notification, seed.notifications);
-    if ((await M.Opd.countDocuments()) === 0) await replace(M.Opd, seed.opd);
-    if ((await M.Emergency.countDocuments()) === 0) await this.saveEmergency(seed.emergency);
-    if ((await M.Admin.countDocuments()) === 0) {
-      await M.Admin.create({ username: adminUsername, hash: adminHash });
+
+    if ((await tableCount(sql, 'departments')) === 0) {
+      await Promise.all(seed.departments.map((d) => sql`INSERT INTO departments (data) VALUES (${JSON.stringify(d)})`));
+    }
+    if ((await tableCount(sql, 'doctors')) === 0) {
+      await Promise.all(seed.doctors.map((d) => sql`INSERT INTO doctors (data) VALUES (${JSON.stringify(d)})`));
+    }
+    if ((await tableCount(sql, 'notices')) === 0) {
+      await Promise.all(seed.notices.map((n) => sql`INSERT INTO notices (data) VALUES (${JSON.stringify(n)})`));
+    }
+    if ((await tableCount(sql, 'notifications')) === 0) {
+      await Promise.all(seed.notifications.map((n) => sql`INSERT INTO notifications (data) VALUES (${JSON.stringify(n)})`));
+    }
+    if ((await tableCount(sql, 'opd_rows')) === 0) {
+      await Promise.all(seed.opd.map((o) => sql`INSERT INTO opd_rows (data) VALUES (${JSON.stringify(o)})`));
+    }
+    if ((await tableCount(sql, 'emergency')) === 0) {
+      await this.saveEmergency(seed.emergency);
+    }
+    if ((await tableCount(sql, 'admins')) === 0) {
+      await sql`INSERT INTO admins (username, hash) VALUES (${adminUsername}, ${adminHash})`;
     }
   }
 }
 
-/* ================= in-memory store (no MongoDB on this machine) ================= */
+/* ================= in-memory store (no database configured) ================= */
 export class MemoryStore implements Store {
   private depts = seedBootstrap().departments;
   private docs = seedBootstrap().doctors;
@@ -184,8 +209,8 @@ interface Store {
   setAdminPassword(username: string, hash: string): Promise<void>;
 }
 
-export async function createStore(usingMongo: boolean, adminUsername: string, adminHash: string): Promise<Store> {
-  const store: Store = usingMongo ? new MongoStore() : new MemoryStore();
+export async function createStore(usingDb: boolean, adminUsername: string, adminHash: string): Promise<Store> {
+  const store: Store = usingDb ? new PostgresStore() : new MemoryStore();
   await store.seed(adminUsername, adminHash);
   return store;
 }

@@ -12,13 +12,13 @@ let cached: ReturnType<typeof createApp> | null = null;
 async function getApp() {
   if (!cached) {
     /* `cached` survives across invocations on the same warm lambda instance.
-       When MONGODB_URI is set this connects to real, persistent MongoDB
+       When DATABASE_URL is set this connects to real, persistent Postgres
        (same as the standalone server); otherwise it falls back to the
        in-memory store, which resets on every cold start. */
-    const usingMongo = await tryConnect(process.env.MONGODB_URI);
+    const usingDb = await tryConnect(process.env.DATABASE_URL);
     const adminHash = await hashPassword(ADMIN_PASSWORD);
-    const store = await createStore(usingMongo, ADMIN_USERNAME, adminHash);
-    cached = createApp(store, { usingMongo });
+    const store = await createStore(usingDb, ADMIN_USERNAME, adminHash);
+    cached = createApp(store, { usingDb });
   }
   return cached;
 }

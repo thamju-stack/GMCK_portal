@@ -11,16 +11,16 @@ const ADMIN_USERNAME = process.env.ADMIN_USER ?? 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASS ?? 'admin123';
 
 async function main() {
-  const usingMongo = await tryConnect(process.env.MONGODB_URI);
+  const usingDb = await tryConnect(process.env.DATABASE_URL);
   const adminHash = await hashPassword(ADMIN_PASSWORD);
-  const store = await createStore(usingMongo, ADMIN_USERNAME, adminHash);
+  const store = await createStore(usingDb, ADMIN_USERNAME, adminHash);
 
-  const app = createApp(store, { usingMongo });
+  const app = createApp(store, { usingDb });
 
   app.listen(PORT, () => {
-    console.log(`[gmc] API listening on http://127.0.0.1:${PORT} (mode: ${usingMongo ? 'mongo' : 'memory'})`);
-    if (!usingMongo) {
-      console.log('[gmc] NOTE: MongoDB is not connected — in-memory data resets on restart.');
+    console.log(`[gmc] API listening on http://127.0.0.1:${PORT} (mode: ${usingDb ? 'postgres' : 'memory'})`);
+    if (!usingDb) {
+      console.log('[gmc] NOTE: no database connected — in-memory data resets on restart.');
     }
     console.log(`[gmc] admin login: ${ADMIN_USERNAME} / ${ADMIN_PASSWORD} (change me!)`);
   });

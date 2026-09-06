@@ -2,8 +2,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'rea
 import { Provider, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 
-import { Layout } from '@/components/chrome';
-import { PhoneFrame } from '@/components/chrome';
+import { AppFrame, Layout, PhoneFrame } from '@/components/chrome';
 import type { RootState } from '@/store';
 import { persistor, store } from '@/store';
 
@@ -75,11 +74,13 @@ function AppRoutes() {
 
 function StandalonePage() {
   return (
-    <PhoneFrame>
-      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
-        <Outlet />
-      </div>
-    </PhoneFrame>
+    <AppFrame>
+      <PhoneFrame>
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
+          <Outlet />
+        </div>
+      </PhoneFrame>
+    </AppFrame>
   );
 }
 

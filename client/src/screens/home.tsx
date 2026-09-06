@@ -226,7 +226,7 @@ export function SearchScreen() {
         {deptHits.length > 0 && (
           <>
             <SecTitle>Departments ({deptHits.length})</SecTitle>
-            <div className="flex flex-col gap-2.5">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {deptHits.map((d) => (
                 <Card key={d.name} title={d.name} subtext={d.desc} icon={<Building2 size={19} />}
                   onClick={() => navigate(`/department?dept=${encodeURIComponent(d.name)}`)} />
@@ -238,7 +238,7 @@ export function SearchScreen() {
         {docHits.length > 0 && (
           <>
             <SecTitle>Doctors ({docHits.length})</SecTitle>
-            <div className="flex flex-col gap-2.5">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {docHits.map((d) => (
                 <Card key={d.name} title={d.name} subtext={`${d.des} • ${d.dept}`} icon={<Stethoscope size={19} />}
                   onClick={() => navigate(`/doctor?name=${encodeURIComponent(d.name)}&des=${encodeURIComponent(d.des)}&dept=${encodeURIComponent(d.dept)}&spec=${encodeURIComponent(d.spec)}`)} />
@@ -270,8 +270,8 @@ export function NoticesScreen() {
         <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
           {NOTICE_TABS.map((c) => <Chip key={c} label={c} active={tab === c} onClick={() => setTab(c)} />)}
         </div>
-        <div className="mt-4 flex flex-col gap-2.5">
-          {list.length === 0 && <EmptyState title="No notices here" />}
+        <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {list.length === 0 && <div className="sm:col-span-2"><EmptyState title="No notices here" /></div>}
           {list.map((n) => <NoticeCard key={n.t} n={n} onClick={() => navigate('/notices')} />)}
         </div>
         <div className="mt-4"><SampleBanner /></div>

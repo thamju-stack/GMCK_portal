@@ -63,7 +63,7 @@ export function AcademicsScreen() {
           <div className="mt-1.5 text-[18px] font-extrabold leading-tight">Centre of Learning</div>
           <div className="mt-1 text-[12px] font-medium text-white/80">UG, PG &amp; super speciality courses</div>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-2.5">
+        <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
           {ACAD_GRID.map((g) => (
             <button key={g.t} onClick={() => (g.t === 'Academic Calendar' ? navigate('/academic-calendar') : topic(g.t))}
               className="flex flex-col items-center gap-2 rounded-2xl border border-line bg-white p-4 shadow-sm transition active:scale-95">
@@ -84,7 +84,7 @@ export function AcademicCalendarScreen() {
     <ScreenContainer>
       <AppBar title="Academic Calendar" sub="Important academic dates" />
       <div className="p-4 pb-24">
-        <div className="flex flex-col gap-2.5">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {ACADEMIC_CAL.map(([term, range]) => (
             <div key={term} className="flex items-center gap-3 rounded-2xl border border-line bg-white p-3.5 shadow-sm">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-purple-100 text-purple-600"><CalendarDays size={18} /></div>
@@ -127,7 +127,7 @@ export function LibraryScreen() {
           </div>
         </div>
         <SecTitle>Services</SecTitle>
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           {['Reference desk', 'Journals', 'Digital library', 'Reprography'].map((s) => (
             <div key={s} className="flex items-center gap-2 rounded-xl border border-line bg-white px-3 py-2.5 text-[12px] font-bold text-ink shadow-sm">
               <BookOpen size={14} className="shrink-0 text-teal" /> {s}
@@ -160,7 +160,7 @@ export function StudentScreen() {
             </div>
             <FileText size={18} className="opacity-80" />
           </button>
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
             {[{ Icon: FileText, t: 'Results' }, { Icon: Download, t: 'Downloads' }, { Icon: Video, t: 'Classes' }, { Icon: User, t: 'Profile' }].map((g) => (
               <button key={g.t} onClick={() => topic(g.t)} className="flex flex-col items-center gap-2 rounded-2xl border border-line bg-white p-4 shadow-sm transition active:scale-95">
                 <div className="grid h-11 w-11 place-items-center rounded-2xl bg-plight text-p"><g.Icon size={20} /></div>
@@ -184,9 +184,11 @@ export function NotificationsScreen() {
       <AppBar title="Notifications" sub="In-app alerts" right={
         <button onClick={() => setItems(items.map((n) => ({ ...n, unread: false })))} className="rounded-xl bg-plight px-3 py-1.5 text-[11px] font-extrabold text-p">Mark all read</button>
       } />
-      <div className="p-4 pb-24 flex flex-col gap-2.5">
-        {items.length === 0 && <EmptyState title="All caught up" />}
-        {items.map((n) => <NotifItem key={n.t} n={n} />)}
+      <div className="p-4 pb-24">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {items.length === 0 && <div className="sm:col-span-2"><EmptyState title="All caught up" /></div>}
+          {items.map((n) => <NotifItem key={n.t} n={n} />)}
+        </div>
         <div className="mt-3"><SampleBanner /></div>
       </div>
     </ScreenContainer>

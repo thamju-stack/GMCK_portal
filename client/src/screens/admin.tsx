@@ -40,7 +40,7 @@ function Login() {
   return (
     <ScreenContainer>
       <AppBar title="Admin" sub="Restricted access" />
-      <div className="p-4 pb-24">
+      <div className="p-4 pb-24 md:mx-auto md:max-w-md">
         <div className="rounded-2xl bg-ink p-5 text-white shadow-md">
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/10"><ShieldCheck size={22} /></div>
           <div className="mt-3 text-[18px] font-extrabold">Hospital Administration</div>
@@ -54,10 +54,10 @@ function Login() {
           </div>
           <div>
             <FieldLabel>Password</FieldLabel>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" />
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
           </div>
         </div>
-        <div className="mt-5"><Button onClick={submit} disabled={busy}>{busy ? 'Signing inâ€¦' : 'Sign in'}</Button></div>
+        <div className="mt-5"><Button onClick={submit} disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</Button></div>
         <div className="mt-3"><Callout>Default demo credentials (admin / admin123). The hospital should change these before launch.</Callout></div>
       </div>
     </ScreenContainer>
@@ -99,7 +99,7 @@ function DeptEditor() {
 
   return (
     <div>
-      <div className="flex flex-col gap-2.5">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         {depts.map((d, i) => (
           <div key={d.name} className="rounded-2xl border border-line bg-white p-3.5 shadow-sm">
             <div className="flex items-center justify-between gap-2">
@@ -148,7 +148,7 @@ function DocEditor() {
 
   return (
     <div>
-      <div className="flex flex-col gap-2.5">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         {docs.map((d, i) => (
           <div key={d.name} className="rounded-2xl border border-line bg-white p-3.5 shadow-sm">
             <div className="flex items-center justify-between gap-2">
@@ -197,10 +197,10 @@ function EmergencyEditor() {
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 md:max-w-md">
       <div>
         <FieldLabel>Emergency phone</FieldLabel>
-        <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 â€¦" />
+        <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 …" />
       </div>
       <div>
         <FieldLabel>Helpdesk info</FieldLabel>
@@ -237,7 +237,7 @@ function PasswordEditor() {
   };
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 md:max-w-md">
       <div>
         <FieldLabel>Current password</FieldLabel>
         <Input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} />

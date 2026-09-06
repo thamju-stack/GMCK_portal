@@ -103,7 +103,7 @@ export function AppointmentScreen() {
   return (
     <ScreenContainer>
       <AppBar title="Book Appointment" sub="OPD appointment request" />
-      <div className="p-4 pb-24">
+      <div className="p-4 pb-24 md:mx-auto md:max-w-md">
         <div className="grid grid-cols-2 gap-2.5">
           <MinCard label="OPD Block" value="Ground Floor" />
           <MinCard label="Registration" value="Mon–Sat" />
@@ -159,8 +159,8 @@ export function NavigationScreen() {
         {NAV_SECTIONS.map((sec) => (
           <div key={sec.title}>
             <SecTitle>{sec.title}</SecTitle>
-            <div className="flex flex-col gap-2.5">
-              {all.filter((r) => sec.rows.includes(r)).length === 0 && query && <EmptyState title="No places match" />}
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {all.filter((r) => sec.rows.includes(r)).length === 0 && query && <div className="sm:col-span-2"><EmptyState title="No places match" /></div>}
               {all.filter((r) => sec.rows.includes(r)).map((r) => <RouteCard key={r[0]} r={r} />)}
             </div>
           </div>
@@ -208,24 +208,26 @@ export function TestsScreen() {
       <AppBar title="Tests &amp; Reports" sub="Laboratory &amp; Radiology" />
       <div className="p-4 pb-24">
         <SecTitle>Laboratory</SecTitle>
-        <div className="flex flex-col gap-2.5">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {lab.map((t) => <TestItemRow key={t.title} test={t} onClick={() => navigate(`/test?title=${encodeURIComponent(t.title)}&type=${encodeURIComponent(t.type)}&sample=${encodeURIComponent(t.sample)}&prep=${encodeURIComponent(t.prep)}`)} />)}
         </div>
 
         <SecTitle>Sample Collection</SecTitle>
-        <InfoCard icon={FileText} title="Sample Collection Points" rows={[
-          ['Central Laboratory', 'Ground Floor'],
-          ['Collection Timing', 'Sample (08:00–11:00)'],
-          ['Fasting Tests', 'Morning hours'],
-        ]} />
-        <div className="mt-2.5"><InfoCard icon={Download} title="Report Collection" rows={[
-          ['Report Counter', 'Ground Floor'],
-          ['Turnaround', 'Same day (most)'],
-          ['Online Reports', 'Not available yet'],
-        ]} /></div>
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          <InfoCard icon={FileText} title="Sample Collection Points" rows={[
+            ['Central Laboratory', 'Ground Floor'],
+            ['Collection Timing', 'Sample (08:00–11:00)'],
+            ['Fasting Tests', 'Morning hours'],
+          ]} />
+          <InfoCard icon={Download} title="Report Collection" rows={[
+            ['Report Counter', 'Ground Floor'],
+            ['Turnaround', 'Same day (most)'],
+            ['Online Reports', 'Not available yet'],
+          ]} />
+        </div>
 
         <SecTitle>Radiology</SecTitle>
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
           {rad.map((t) => (
             <button key={t.title} onClick={() => navigate(`/test?title=${encodeURIComponent(t.title)}&type=${encodeURIComponent(t.type)}&sample=${encodeURIComponent(t.sample)}&prep=${encodeURIComponent(t.prep)}`)}
               className="flex flex-col items-center gap-2 rounded-2xl border border-line bg-white p-4 shadow-sm transition active:scale-95">

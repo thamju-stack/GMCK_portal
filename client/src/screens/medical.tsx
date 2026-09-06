@@ -28,7 +28,7 @@ export function DepartmentsScreen() {
         <div className="no-scrollbar flex gap-2 overflow-x-auto">
           {DEPT_CATS.map((c) => <Chip key={c} label={c} active={cat === c} onClick={() => setCat(c)} />)}
         </div>
-        <div className="mt-4 grid grid-cols-1 gap-2.5">
+        <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {list.map((d) => (
             <DeptCard key={d.name} d={d} onClick={() => navigate(`/department?dept=${encodeURIComponent(d.name)}`)} />
           ))}
@@ -80,7 +80,7 @@ export function DepartmentScreen() {
         )}
 
         <SecTitle>Services</SecTitle>
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
           {dept.services.map((s) => (
             <div key={s} className="flex items-center gap-2 rounded-xl border border-line bg-white px-3 py-2.5 text-[12px] font-bold text-ink shadow-sm">
               <Shield size={14} className="shrink-0 text-teal" /> {s}
@@ -100,9 +100,9 @@ export function DepartmentScreen() {
         </div>
 
         <SecTitle>Doctors</SecTitle>
-        <div className="flex flex-col gap-2.5">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {docs.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-line bg-white px-4 py-3 text-center text-[12px] font-bold text-soft">
+            <div className="rounded-2xl border border-dashed border-line bg-white px-4 py-3 text-center text-[12px] font-bold text-soft sm:col-span-2">
               Doctor list for this department coming soon (placeholder).
             </div>
           )}
@@ -152,8 +152,8 @@ export function DoctorsScreen() {
         <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto">
           {depts.map((c) => <Chip key={c} label={c} active={dept === c} onClick={() => setDept(c)} />)}
         </div>
-        <div className="mt-4 flex flex-col gap-2.5">
-          {list.length === 0 && <EmptyState title="No doctors found" />}
+        <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {list.length === 0 && <div className="sm:col-span-2"><EmptyState title="No doctors found" /></div>}
           {list.map((d) => (
             <DocCard key={d.name} doc={d} onClick={() => navigate(`/doctor?name=${encodeURIComponent(d.name)}&des=${encodeURIComponent(d.des)}&dept=${encodeURIComponent(d.dept)}&spec=${encodeURIComponent(d.spec)}`)} />
           ))}

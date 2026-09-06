@@ -41,6 +41,24 @@ cd server && npm run build && npm start
 
 The API serves `client/dist` and SPA-routes all non-`/api` paths.
 
+> Tip: `npm install` once at the repository root — npm workspaces installs
+> both `client/` and `server/` together (a single hoisted `node_modules`).
+
+## Deploy to Vercel
+
+The repo is pre-wired for Vercel (root `package.json` + `vercel.json`):
+
+1. Import the GitHub repo at **Root Directory `./`**.
+2. Framework is auto-detected as **Other**; build runs `npm run build`
+   (compiles the Vite client to `client/dist`), which `vercel.json`
+   publishes as the output directory.
+3. The Express API is exposed as a serverless function via `api/index.ts`;
+   `vercel.json` rewrites `/api/*` to it and SPA-rewrites everything else
+   to `index.html`.
+4. Optional env vars (Vercel → Project → Settings → Environment Variables):
+   `ADMIN_USER`, `ADMIN_PASS`. There is no persistent database — the
+   function uses the in-memory store, so data resets on cold start.
+
 ## API
 
 | Method | Path                  | Auth | Purpose                           |

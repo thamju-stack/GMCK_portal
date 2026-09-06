@@ -1,10 +1,21 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { persistReducer, persistStore } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
 
 import bootstrapReducer from './bootstrapSlice';
 import prefsReducer from './prefsSlice';
+
+const storage = {
+  getItem: (key: string) => Promise.resolve(window.localStorage.getItem(key)),
+  setItem: (key: string, value: string) => {
+    window.localStorage.setItem(key, value);
+    return Promise.resolve();
+  },
+  removeItem: (key: string) => {
+    window.localStorage.removeItem(key);
+    return Promise.resolve();
+  },
+};
 
 const rootReducer = combineReducers({
   prefs: prefsReducer,

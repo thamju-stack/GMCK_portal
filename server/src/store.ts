@@ -95,16 +95,20 @@ export class MongoStore implements Store {
     await m().Admin.updateOne({ username }, { $set: { hash } }, { upsert: true });
   }
 
+  /* Only seeds collections that are still empty — Mongo persists across
+     restarts/cold starts, so re-seeding unconditionally would wipe out
+     admin edits every time the serverless function cold-starts. */
   async seed(adminUsername: string, adminHash: string): Promise<void> {
     const seed = seedBootstrap();
-    await replace(m().Department, seed.departments);
-    await replace(m().Doctor, seed.doctors);
-    await replace(m().Notice, seed.notices);
-    await replace(m().Notification, seed.notifications);
-    await replace(m().Opd, seed.opd);
-    await this.saveEmergency(seed.emergency);
-    if ((await m().Admin.countDocuments()) === 0) {
-      await m().Admin.create({ username: adminUsername, hash: adminHash });
+    const M = m();
+    if ((await M.Department.countDocuments()) === 0) await replace(M.Department, seed.departments);
+    if ((await M.Doctor.countDocuments()) === 0) await replace(M.Doctor, seed.doctors);
+    if ((await M.Notice.countDocuments()) === 0) await replace(M.Notice, seed.notices);
+    if ((await M.Notification.countDocuments()) === 0) await replace(M.Notification, seed.notifications);
+    if ((await M.Opd.countDocuments()) === 0) await replace(M.Opd, seed.opd);
+    if ((await M.Emergency.countDocuments()) === 0) await this.saveEmergency(seed.emergency);
+    if ((await M.Admin.countDocuments()) === 0) {
+      await M.Admin.create({ username: adminUsername, hash: adminHash });
     }
   }
 }

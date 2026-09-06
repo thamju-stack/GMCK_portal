@@ -55,9 +55,14 @@ The repo is pre-wired for Vercel (root `package.json` + `vercel.json`):
 3. The Express API is exposed as a serverless function via `api/index.ts`;
    `vercel.json` rewrites `/api/*` to it and SPA-rewrites everything else
    to `index.html`.
-4. Optional env vars (Vercel → Project → Settings → Environment Variables):
-   `ADMIN_USER`, `ADMIN_PASS`. There is no persistent database — the
-   function uses the in-memory store, so data resets on cold start.
+4. Env vars (Vercel → Project → Settings → Environment Variables):
+   - `JWT_SECRET` — **required**. Without it, admin login is disabled in
+     production rather than silently falling back to an insecure default.
+   - `ADMIN_USER`, `ADMIN_PASS` — optional, default to `admin` / `admin123`.
+   - `MONGODB_URI` — optional but recommended. Without it the function uses
+     an in-memory store that resets on every cold start (admin edits and
+     appointment submissions are lost). With it, data persists in MongoDB
+     the same way it does when self-hosting.
 
 ## API
 

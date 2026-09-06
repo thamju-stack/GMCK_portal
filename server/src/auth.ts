@@ -1,7 +1,12 @@
 import type { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 
-const SECRET = process.env.JWT_SECRET ?? 'gmc-dev-secret';
+const isProd = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+const envSecret = process.env.JWT_SECRET;
+if (!envSecret && isProd) {
+  throw new Error('JWT_SECRET environment variable is required in production');
+}
+const SECRET = envSecret ?? 'gmc-dev-secret';
 const TOKEN_TTL = '7d';
 
 export function signToken(username: string): string {

@@ -7,7 +7,8 @@ import type { Store } from './store.js';
 import { hashPassword } from './store.js';
 import type { AppointmentInput, Department, Doctor, EmergencyConfig } from './types.js';
 
-const COOKIE = { httpOnly: true, sameSite: 'lax' as const, maxAge: 7 * 24 * 3600 * 1000 };
+const isProd = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+const COOKIE = { httpOnly: true, sameSite: 'lax' as const, secure: isProd, maxAge: 7 * 24 * 3600 * 1000 };
 
 export function createRouter(store: Store): Router {
   const r = Router();
